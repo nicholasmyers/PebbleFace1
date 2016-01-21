@@ -1,0 +1,22 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "WazCorp",
+    "longName": "Project 1",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "Project 1",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "57e45148-c242-47d5-be5e-54f40fa04d4a",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
