@@ -7,7 +7,21 @@
     "longName": "Project 1",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "images/background.png",
+                "name": "BITMAP_FUN_BACKGROUND",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "characterRegex": "[0-9:.]",
+                "file": "fonts/perfect-dos-vga.ttf",
+                "name": "FONT_PERFECT_DOS_48",
+                "targetPlatforms": null,
+                "type": "font"
+            }
+        ]
     },
     "sdkVersion": "3",
     "shortName": "Project 1",

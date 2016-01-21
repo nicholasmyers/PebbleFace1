@@ -2,12 +2,26 @@
 #include "main.h"
 static Window *s_main_window;
 static TextLayer *s_time_layer;
+static GFont s_time_font;
+static BitmapLayer *s_background_layer;
+static GBitmap *s_background_bitmap;
 
 static void main_window_load(Window *window) {
   
+	//create font
+	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_48));
+	
   //get info about window
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+	
+	//create GBitmap
+	s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BITMAP_FUN_BACKGROUND);
+	//create BitmapLayer to display GBitmap
+	s_background_layer = bitmap_layer_create(bounds);
+	//set the bitmap onto the layer and add to the window
+	bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+	layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
   
   //create the TextLayer with specific bounds
   s_time_layer = text_layer_create(
@@ -17,7 +31,7 @@ static void main_window_load(Window *window) {
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, GColorBlack);
   text_layer_set_text(s_time_layer, "00:00");
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  text_layer_set_font(s_time_layer, s_time_font);
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
   //add it as a child layer to the window's root layer
@@ -25,8 +39,16 @@ static void main_window_load(Window *window) {
 }
 
 static void main_window_unload(Window *window) {
+	
+	//unload GFont
+	fonts_unload_custom_font(s_time_font);
   //destroy TextLayer
   text_layer_destroy(s_time_layer);
+	
+	//destroy GBitmap
+	gbitmap_destroy(s_background_bitmap);
+	//destroy BitmapLayer
+	bitmap_layer_destroy(s_background_layer);
 }
 
 static void update_time() {
@@ -50,6 +72,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 static void init() {
   //create main window element and assign to pointer
   s_main_window = window_create();
+	
+	window_set_background_color(s_main_window, GColorBlack);
   
   //set handlers to manage the elements inside the window
   window_set_window_handlers(s_main_window, (WindowHandlers) {
