@@ -15,6 +15,13 @@
                 "type": "bitmap"
             },
             {
+                "characterRegex": "[0-9:a-zA-Z.]",
+                "file": "fonts/perfect-dos-vga.ttf",
+                "name": "FONT_PERFECT_DOS_20",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
                 "characterRegex": "[0-9:.]",
                 "file": "fonts/perfect-dos-vga.ttf",
                 "name": "FONT_PERFECT_DOS_48",

@@ -1,8 +1,8 @@
 #include <pebble.h>
 #include "main.h"
 static Window *s_main_window;
-static TextLayer *s_time_layer, *s_date_layer;
-static GFont s_time_font;
+static TextLayer *s_time_layer, *s_date_layer, *s_weather_layer;
+static GFont s_time_font, s_weather_font;
 static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 
@@ -10,6 +10,8 @@ static void main_window_load(Window *window) {
   
 	//create font
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_48));
+	s_weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
+	
   //get info about window
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -39,27 +41,43 @@ static void main_window_load(Window *window) {
 	/* DATE LAYER */
 	//create date layer
 	s_date_layer = text_layer_create(
-		GRect(2, PBL_IF_ROUND_ELSE(124, 120), bounds.size.w, 50));
+		GRect(2, PBL_IF_ROUND_ELSE(134, 130), bounds.size.w, 50));
 	
 	//add date layer information
 	text_layer_set_background_color(s_date_layer, GColorClear);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
-	text_layer_set_font(s_date_layer, s_time_font);
+	text_layer_set_font(s_date_layer, s_weather_font);
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
+	
+	/* WEATHER LAYER */
+	//create temperature layer
+	s_weather_layer = text_layer_create(
+		GRect(2, PBL_IF_ROUND_ELSE(8, 10), bounds.size.w, 25));
+	
+	//style the text
+	text_layer_set_background_color(s_weather_layer, GColorClear);
+	text_layer_set_text_color(s_weather_layer, GColorWhite);
+	text_layer_set_font(s_weather_layer, s_weather_font);
+	text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
+	text_layer_set_text(s_weather_layer, "Loading...");
   
 	
   //add both as children layers to the window's root layer
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
-	layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
 }
 
 static void main_window_unload(Window *window) {
 	
 	//unload GFont
 	fonts_unload_custom_font(s_time_font);
+	fonts_unload_custom_font(s_weather_font);
   //destroy TextLayer
   text_layer_destroy(s_time_layer);
 	text_layer_destroy(s_date_layer);
+	text_layer_destroy(s_weather_layer);
+	
 	//destroy GBitmap
 	gbitmap_destroy(s_background_bitmap);
 	//destroy BitmapLayer
@@ -85,8 +103,8 @@ static void update_date() {
 	struct tm *tick_date = localtime(&temp);
 	
 	//write current weekday and day into buffer
-	static char s_buffer[9];
-	strftime(s_buffer, sizeof(s_buffer), "%m.%d", tick_date);
+	static char s_buffer[20];
+	strftime(s_buffer, sizeof(s_buffer), "%a %b. %d", tick_date);
 	
 	//display this date on TextLayer
 	text_layer_set_text(s_date_layer, s_buffer);
