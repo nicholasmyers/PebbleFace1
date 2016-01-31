@@ -103,7 +103,7 @@ static void update_date() {
 	struct tm *tick_date = localtime(&temp);
 	
 	//write current weekday and day into buffer
-	static char s_buffer[20];
+	static char s_buffer[12];
 	strftime(s_buffer, sizeof(s_buffer), "%a %b. %d", tick_date);
 	
 	//display this date on TextLayer
@@ -113,10 +113,58 @@ static void update_date() {
 //allows access to current time
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
+	
+	//get weather update every 30 mins
+	if(tick_time->tm_min % 30 == 0) {
+		//begin dictionary
+		DictionaryIterator *iter;
+		app_message_outbox_begin(&iter);
+		
+		//add a key-value pair
+		dict_write_uint8(iter, 0, 0);
+		
+		//send the message
+		app_message_outbox_send();
+	}
 }
 		
 static void date_handler(struct tm *tick_date, TimeUnits units_changed) {
 	update_date();
+}
+
+//app CallBack function to process incoming messages and errors from JS (get weather)
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+	//store incoming information
+	static char temperature_buffer[8];
+	static char conditions_buffer[32];
+	static char weather_layer_buffer[32];
+	
+	//read tuples for data
+	Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
+	Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
+	
+	//if all data is available, use it
+	if(temp_tuple && conditions_tuple) {
+		snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32);
+		snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", conditions_tuple->value->cstring);
+		
+		//assemble full string and display
+		snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "%s, %s", temperature_buffer, conditions_buffer);
+		text_layer_set_text(s_weather_layer, weather_layer_buffer);
+	}
+}
+
+//see outcomes and any errors that occur during app callback
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+	APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
 static void init() {
@@ -142,6 +190,16 @@ static void init() {
   //make sure time and date are displayed from start
   update_time();
 	update_date();
+	
+	//register callbacks (before opening appMessage to prevent missing messages)
+	app_message_register_inbox_received(inbox_received_callback);
+	app_message_register_inbox_dropped(inbox_dropped_callback);
+	app_message_register_outbox_failed(outbox_failed_callback);
+	app_message_register_outbox_sent(outbox_sent_callback);
+	
+	//open appMessage to allow the watchface to receive incoming messages
+	//the functions in param 0, 1 obtain maximum available buffer sizes
+	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 static void deinit() {
