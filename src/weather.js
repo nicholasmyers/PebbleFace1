@@ -28,7 +28,6 @@ function locationSuccess(pos) {
 			//TODO: allow user to determine whether they want farenheit or celsius displayed
 			//temperature is in Kelvin and requires adjustment
 			var temperature = Math.round(json.main.temp - 273.15); // <-- for celsius
-			//var temperature = Math.round(json.main.temp - 459.67); //for farenheit
 			console.log('Temperature is ' + temperature);
 			
 			//conditions
