@@ -14,7 +14,7 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 	
-	//create GBitmap
+	//create GBitmap background
 	s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BITMAP_FUN_BACKGROUND);
 	//create BitmapLayer to display GBitmap
 	s_background_layer = bitmap_layer_create(bounds);
@@ -22,9 +22,11 @@ static void main_window_load(Window *window) {
 	bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
 	layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
 	
+	
+	/* TIME LAYER */
   //create the time layer with specific bounds
   s_time_layer = text_layer_create(
-    GRect(0, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50));
+    GRect(2, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50));
   
   //improve the layout to be more like a watchface
   text_layer_set_background_color(s_time_layer, GColorClear);
@@ -33,19 +35,22 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_time_layer, s_time_font);
 	text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 	
+	
+	/* DATE LAYER */
 	//create date layer
-	/*s_date_layer = text_layer_create(
-		GRect(0, 120, 144, 30));
+	s_date_layer = text_layer_create(
+		GRect(2, PBL_IF_ROUND_ELSE(124, 120), bounds.size.w, 50));
 	
 	//add date layer information
 	text_layer_set_background_color(s_date_layer, GColorClear);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
 	text_layer_set_font(s_date_layer, s_time_font);
-	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);*/
+	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
   
-  //add it as a child layer to the window's root layer
+	
+  //add both as children layers to the window's root layer
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
-	//layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
+	layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 }
 
 static void main_window_unload(Window *window) {
@@ -54,7 +59,7 @@ static void main_window_unload(Window *window) {
 	fonts_unload_custom_font(s_time_font);
   //destroy TextLayer
   text_layer_destroy(s_time_layer);
-	//text_layer_destroy(s_date_layer);
+	text_layer_destroy(s_date_layer);
 	//destroy GBitmap
 	gbitmap_destroy(s_background_bitmap);
 	//destroy BitmapLayer
@@ -74,27 +79,27 @@ static void update_time() {
   text_layer_set_text(s_time_layer, s_buffer);
 }
 		
-/*static void update_date() {
+static void update_date() {
 	//get a tm structure
 	time_t temp = time(NULL);
 	struct tm *tick_date = localtime(&temp);
 	
 	//write current weekday and day into buffer
-	static char s_buffer[10];
-	strftime(s_buffer, sizeof(s_buffer), "%a %d", tick_date);
+	static char s_buffer[9];
+	strftime(s_buffer, sizeof(s_buffer), "%m.%d", tick_date);
 	
 	//display this date on TextLayer
 	text_layer_set_text(s_date_layer, s_buffer);
-}*/
+}
 
 //allows access to current time
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 		
-/*static void date_handler(struct tm *tick_date, TimeUnits units_changed) {
+static void date_handler(struct tm *tick_date, TimeUnits units_changed) {
 	update_date();
-}*/
+}
 
 static void init() {
   //create main window element and assign to pointer
@@ -114,18 +119,17 @@ static void init() {
   //register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	
-	//tick_timer_service_subscribe(DAY_UNIT, date_handler);
+	tick_timer_service_subscribe(DAY_UNIT, date_handler);
   
-  //make sure time is displayed from start
+  //make sure time and date are displayed from start
   update_time();
+	update_date();
 }
 
 static void deinit() {
   //destroy window
   window_destroy(s_main_window);
 }
-
-
 
 int main(void) {
   init();
